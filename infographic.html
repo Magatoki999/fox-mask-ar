@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>幻狐録 -GENKOROKU- インフォグラフィック</title>
+    <style>
+        :root {
+            --bg-color: #0a0a0f;
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --text-main: #f0f0f0;
+            --text-sub: #a0a0b0;
+            --cyan: #00ffff;
+            --gold: #ffd700;
+            --red: #ff3333;
+            --purple: #b066ff;
+        }
+
+        body {
+            margin: 0;
+            padding: 40px 20px;
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(0, 255, 255, 0.05), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(255, 50, 50, 0.05), transparent 25%),
+                radial-gradient(circle at 50% 80%, rgba(176, 102, 255, 0.05), transparent 25%);
+            color: var(--text-main);
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            letter-spacing: 4px;
+            margin: 0 0 10px 0;
+            background: linear-gradient(90deg, var(--cyan), var(--text-main), var(--gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        header p {
+            color: var(--text-sub);
+            font-size: 1.1rem;
+            letter-spacing: 2px;
+        }
+
+        /* Demo Link Button */
+        .demo-link-btn {
+            display: inline-block;
+            margin-top: 25px;
+            padding: 12px 35px;
+            background: linear-gradient(45deg, var(--red), var(--purple));
+            color: #fff;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1rem;
+            border-radius: 30px;
+            letter-spacing: 2px;
+            box-shadow: 0 8px 20px rgba(176, 102, 255, 0.3);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .demo-link-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 25px rgba(176, 102, 255, 0.5);
+            background: linear-gradient(45deg, #ff4d4d, #c285ff);
+        }
+
+        .demo-link-btn:active {
+            transform: translateY(1px);
+        }
+
+        /* Core Triad Section */
+        .triad-section {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            margin-bottom: 60px;
+        }
+
+        @media (max-width: 768px) {
+            .triad-section {
+                flex-direction: column;
+            }
+        }
+
+        .pillar-card {
+            flex: 1;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 30px 20px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pillar-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+        }
+
+        .pillar-card.physical::before { background: var(--red); }
+        .pillar-card.digital::before { background: var(--cyan); }
+        .pillar-card.web3::before { background: var(--purple); }
+
+        .pillar-card:hover {
+            transform: translateY(-5px);
+        }
+        .pillar-card.physical:hover { box-shadow: 0 10px 30px rgba(255, 50, 50, 0.15); }
+        .pillar-card.digital:hover { box-shadow: 0 10px 30px rgba(0, 255, 255, 0.15); }
+        .pillar-card.web3:hover { box-shadow: 0 10px 30px rgba(176, 102, 255, 0.15); }
+
+        .icon-circle {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            background: rgba(255,255,255,0.05);
+        }
+
+        .pillar-card.physical .icon-circle { color: var(--red); border: 1px solid var(--red); box-shadow: inset 0 0 15px rgba(255,50,50,0.2); }
+        .pillar-card.digital .icon-circle { color: var(--cyan); border: 1px solid var(--cyan); box-shadow: inset 0 0 15px rgba(0,255,255,0.2); }
+        .pillar-card.web3 .icon-circle { color: var(--purple); border: 1px solid var(--purple); box-shadow: inset 0 0 15px rgba(176,102,255,0.2); }
+
+        .pillar-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+
+        .pillar-desc {
+            font-size: 0.9rem;
+            color: var(--text-sub);
+        }
+
+        /* User Loop */
+        .loop-section {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 40px;
+            margin-bottom: 60px;
+            text-align: center;
+        }
+
+        .loop-title {
+            font-size: 1.5rem;
+            margin-bottom: 30px;
+            color: var(--gold);
+        }
+
+        .loop-flow {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .loop-step {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .step-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .step-text {
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        
+        .step-sub {
+            font-size: 0.8rem;
+            color: var(--text-sub);
+        }
+
+        .arrow {
+            color: var(--text-sub);
+            font-size: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .arrow { display: none; }
+            .loop-step { flex: 100%; margin-bottom: 20px; }
+        }
+
+        /* Roadmap */
+        .roadmap-section {
+            margin-bottom: 60px;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            text-align: center;
+            margin-bottom: 40px;
+            letter-spacing: 2px;
+            border-bottom: 1px solid var(--card-border);
+            padding-bottom: 15px;
+        }
+
+        .timeline {
+            position: relative;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .timeline::after {
+            content: '';
+            position: absolute;
+            width: 2px;
+            background: var(--card-border);
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            margin-left: -1px;
+        }
+
+        .phase {
+            padding: 20px 40px;
+            position: relative;
+            background: inherit;
+            width: 50%;
+            box-sizing: border-box;
+        }
+
+        .phase::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            right: -8px;
+            background: var(--bg-color);
+            border: 2px solid var(--gold);
+            top: 25px;
+            border-radius: 50%;
+            z-index: 1;
+        }
+
+        .left { left: 0; }
+        .right { left: 50%; }
+        .right::after { left: -8px; }
+
+        .phase-content {
+            padding: 20px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+        }
+
+        .phase-tag {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            margin-bottom: 10px;
+            background: rgba(255,215,0,0.1);
+            color: var(--gold);
+            border: 1px solid rgba(255,215,0,0.3);
+        }
+
+        .phase-content h3 { margin: 0 0 10px 0; font-size: 1.1rem; }
+        .phase-content p { margin: 0; font-size: 0.85rem; color: var(--text-sub); }
+
+        @media (max-width: 768px) {
+            .timeline::after { left: 20px; }
+            .phase { width: 100%; padding-left: 50px; padding-right: 0; }
+            .right { left: 0; }
+            .phase::after { left: 12px; }
+            .right::after { left: 12px; }
+        }
+
+        /* Monetization Grid */
+        .monetization-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+        }
+
+        .money-card {
+            background: rgba(0,0,0,0.3);
+            border: 1px dashed var(--card-border);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .money-card h4 {
+            margin: 0 0 10px 0;
+            color: #4caf50;
+        }
+
+        .money-card p {
+            margin: 0;
+            font-size: 0.85rem;
+            color: var(--text-sub);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <h1>幻狐録 -GENKOROKU-</h1>
+            <p>伝統工芸(RWA) × 拡張現実(AR) × 所有権証明(Web3)</p>
+            
+            <!-- ARデモへのリンクボタン -->
+            <!-- ※ARデモのファイル名が index.html の場合 -->
+            <a href="index.html" class="demo-link-btn">▶ ARデモを体験する</a>
+        </header>
+
+        <!-- The 3 Pillars -->
+        <div class="triad-section">
+            <div class="pillar-card physical">
+                <div class="icon-circle">🎭</div>
+                <div class="pillar-title">Physical (物理資産)</div>
+                <div class="pillar-desc">
+                    老舗染工場の技術を用いた「高品質な布張り狐面」。デジタルだけでは満たせない圧倒的な「モノとしての所有欲と質感」を提供するRWA（現実資産）。
+                </div>
+            </div>
+
+            <div class="pillar-card digital">
+                <div class="icon-circle">📱</div>
+                <div class="pillar-title">Digital (拡張現実)</div>
+                <div class="pillar-desc">
+                    スマホやグラスをかざすと面が発光し、歌舞伎やサイバー柄が浮かび上がる。物理の顔をキャンバスにした「なりきり体験」と「物語」を付与。
+                </div>
+            </div>
+
+            <div class="pillar-card web3">
+                <div class="icon-circle">💎</div>
+                <div class="pillar-title">Web3 (所有と証明)</div>
+                <div class="pillar-desc">
+                    ユーザーがデザインした一点モノの柄をプリントし、NFTとしてブロックチェーンに刻む。「世界に一つだけ」をデジタルと物理の両面で保証する。
+                </div>
+            </div>
+        </div>
+
+        <!-- User Experience Loop -->
+        <div class="loop-section">
+            <div class="loop-title">終わらない体験のループ (LTV最大化)</div>
+            <div class="loop-flow">
+                <div class="loop-step">
+                    <div class="step-icon">🛍️</div>
+                    <div class="step-text">1. 買う (物理)</div>
+                    <div class="step-sub">観光地やECで実物を購入</div>
+                </div>
+                <div class="arrow">➔</div>
+                <div class="loop-step">
+                    <div class="step-icon">✨</div>
+                    <div class="step-text">2. かざす (AR)</div>
+                    <div class="step-sub">物語の解放・着せ替え</div>
+                </div>
+                <div class="arrow">➔</div>
+                <div class="loop-step">
+                    <div class="step-icon">🔗</div>
+                    <div class="step-text">3. 刻む (NFT)</div>
+                    <div class="step-sub">旅の履歴やデザインを記録</div>
+                </div>
+                <div class="arrow">➔</div>
+                <div class="loop-step">
+                    <div class="step-icon">🌏</div>
+                    <div class="step-text">4. 広がる (全国)</div>
+                    <div class="step-sub">別地域のご当地狐を求めて旅へ</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Roadmap -->
+        <div class="roadmap-section">
+            <div class="section-title">展開ロードマップ</div>
+            <div class="timeline">
+                <div class="phase left">
+                    <div class="phase-content">
+                        <span class="phase-tag">Phase 0: 現在〜</span>
+                        <h3>潜入とR&D（京都）</h3>
+                        <!-- 企業名を架空の名称に変更 -->
+                        <p>京都の老舗染工場（仮称：京洛染工）にジョインし、立体物への布プリント（インクジェット/昇華転写）のリアルな限界値とUV展開の最適解を実務から導き出す。</p>
+                    </div>
+                </div>
+                <div class="phase right">
+                    <div class="phase-content">
+                        <span class="phase-tag">Phase 1: 半年〜1年後</span>
+                        <h3>京都オリジンモデル投下</h3>
+                        <p>京都限定の「原点となる狐面」を実店舗等でリリース。ARによる物語展開（柄の発光、キャラの出現）の実証実験を開始。</p>
+                    </div>
+                </div>
+                <div class="phase left">
+                    <div class="phase-content">
+                        <span class="phase-tag">Phase 2: 1年〜2年後</span>
+                        <h3>Web3コミュニティとカスタム</h3>
+                        <p>NFTを本格実装し、「ユーザーオリジナル柄のプリント受注＆NFT発行（1 of 1）」を開始。所有者限定コミュニティの形成。</p>
+                    </div>
+                </div>
+                <div class="phase right">
+                    <div class="phase-content">
+                        <span class="phase-tag">Phase 3: 2年後〜</span>
+                        <h3>全国ご当地フランチャイズ化</h3>
+                        <p>「愛知のサイバー稲荷」「東北の伝承雪狐」など、地域固有の物語とデザインを乗せたAR狐面プラットフォームとして全国展開。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monetization -->
+        <div class="roadmap-section">
+            <div class="section-title">多元的なマネタイズ構造</div>
+            <div class="monetization-grid">
+                <div class="money-card">
+                    <h4>ハードウェア販売</h4>
+                    <p>狐面本体の販売収益（高単価・実物資産）。インバウンド向けの高利益率商材。</p>
+                </div>
+                <div class="money-card">
+                    <h4>デジタル課金</h4>
+                    <p>AR空間での限定エフェクトや追加ストーリーのアンロック（継続収益・高粗利）。</p>
+                </div>
+                <div class="money-card">
+                    <h4>B2Bライセンス</h4>
+                    <p>各地の観光地やIP（アニメ等）とコラボした限定面の発行ライセンス料。</p>
+                </div>
+                <div class="money-card">
+                    <h4>二次流通ロイヤリティ</h4>
+                    <p>一点モノの面（NFT）がユーザー間で転売された際に自動で入る取引手数料。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
