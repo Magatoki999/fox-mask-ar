@@ -55,12 +55,31 @@
             color: var(--text-sub);
             font-size: 1.1rem;
             letter-spacing: 2px;
+            margin-bottom: 20px;
+        }
+
+        .concept-box {
+            background: rgba(255, 215, 0, 0.05);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto 30px auto;
+            color: #fff;
+            font-size: 1.05rem;
+        }
+        
+        .concept-box strong {
+            color: var(--gold);
+            font-size: 1.2rem;
+            display: block;
+            margin-bottom: 10px;
         }
 
         /* Demo Link Button */
         .demo-link-btn {
             display: inline-block;
-            margin-top: 25px;
+            margin-top: 10px;
             padding: 12px 35px;
             background: linear-gradient(45deg, var(--red), var(--purple));
             color: #fff;
@@ -82,6 +101,16 @@
 
         .demo-link-btn:active {
             transform: translateY(1px);
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            text-align: center;
+            margin-bottom: 40px;
+            letter-spacing: 2px;
+            border-bottom: 1px solid var(--card-border);
+            padding-bottom: 15px;
+            margin-top: 60px;
         }
 
         /* Core Triad Section */
@@ -159,6 +188,39 @@
             color: var(--text-sub);
         }
 
+        /* ★ NEW: Infographic Image Section */
+        .infographic-image-wrapper {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 60px;
+            backdrop-filter: blur(10px);
+        }
+
+        .infographic-image-wrapper img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+            /* 画像が読み込まれるまでのプレースホルダー風スタイル */
+            min-height: 200px;
+            background-color: rgba(255,255,255,0.02);
+            color: var(--text-sub);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-style: italic;
+        }
+
+        .infographic-image-wrapper p {
+            margin-top: 15px;
+            font-size: 0.95rem;
+            color: var(--text-sub);
+            letter-spacing: 1px;
+        }
+
         /* User Loop */
         .loop-section {
             background: var(--card-bg);
@@ -214,19 +276,6 @@
         }
 
         /* Roadmap */
-        .roadmap-section {
-            margin-bottom: 60px;
-        }
-
-        .section-title {
-            font-size: 1.5rem;
-            text-align: center;
-            margin-bottom: 40px;
-            letter-spacing: 2px;
-            border-bottom: 1px solid var(--card-border);
-            padding-bottom: 15px;
-        }
-
         .timeline {
             position: relative;
             max-width: 800px;
@@ -303,6 +352,7 @@
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
             gap: 20px;
+            margin-bottom: 60px;
         }
 
         .money-card {
@@ -328,31 +378,44 @@
 <body>
 
     <div class="container">
-        <!-- Header -->
+        <!-- Header & Concept -->
         <header>
             <h1>幻狐録 -GENKOROKU-</h1>
             <p>伝統工芸(RWA) × 拡張現実(AR) × 所有権証明(Web3)</p>
             
-            <!-- ARデモへのリンクボタン -->
-            <!-- ※ARデモのファイル名が index.html の場合 -->
+            <div class="concept-box">
+                <strong>「ただの飾り」から「共に旅する相棒」へ。</strong>
+                日本の伝統的な「狐面」に、高品質な染色プリント布を立体的に貼り合わせる独自の物理プロダクト（RWA）を開発。<br>
+                そこにAR（拡張現実）とWeb3（NFT）を実装し、現実世界とデジタル空間を交差させる新しいIP・地域創生プラットフォーム。
+            </div>
+
             <a href="index.html" class="demo-link-btn">▶ ARデモを体験する</a>
         </header>
 
+        <!-- ★ NEW: Infographic Image Section -->
+        <div class="section-title">ビジネスモデル図解</div>
+        <div class="infographic-image-wrapper">
+            <!-- ⬇️ ここにNotebookLM等で作成した図解のファイル名を指定してください -->
+            <img src="business_model_diagram.jpg" alt="">
+            <p>※物理資産（Physical）・デジタル体験（AR）・所有権（Web3）が連携するエコシステム</p>
+        </div>
+
         <!-- The 3 Pillars -->
+        <div class="section-title">コアとなる3つの柱</div>
         <div class="triad-section">
             <div class="pillar-card physical">
                 <div class="icon-circle">🎭</div>
-                <div class="pillar-title">Physical (物理資産)</div>
+                <div class="pillar-title">Physical (物理資産・RWA)</div>
                 <div class="pillar-desc">
-                    老舗染工場の技術を用いた「高品質な布張り狐面」。デジタルだけでは満たせない圧倒的な「モノとしての所有欲と質感」を提供するRWA（現実資産）。
+                    京都の老舗染工場の技術を用いた高品質な「布張り狐面」。圧倒的な「モノとしての所有欲と質感」を提供する。
                 </div>
             </div>
 
             <div class="pillar-card digital">
                 <div class="icon-circle">📱</div>
-                <div class="pillar-title">Digital (拡張現実)</div>
+                <div class="pillar-title">Digital (拡張現実・AR)</div>
                 <div class="pillar-desc">
-                    スマホやグラスをかざすと面が発光し、歌舞伎やサイバー柄が浮かび上がる。物理の顔をキャンバスにした「なりきり体験」と「物語」を付与。
+                    スマホやスマートグラスをかざすと、面が発光し、歌舞伎やサイバー柄が浮かび上がる。物理の顔をキャンバスにした「なりきり体験」と「物語」を付与。
                 </div>
             </div>
 
@@ -360,97 +423,94 @@
                 <div class="icon-circle">💎</div>
                 <div class="pillar-title">Web3 (所有と証明)</div>
                 <div class="pillar-desc">
-                    ユーザーがデザインした一点モノの柄をプリントし、NFTとしてブロックチェーンに刻む。「世界に一つだけ」をデジタルと物理の両面で保証する。
+                    ユーザーがデザインした一点モノの柄をプリント受注し、NFTとしてブロックチェーンに刻む。「世界に一つだけ」をデジタルと物理の両面で保証。
                 </div>
             </div>
         </div>
 
         <!-- User Experience Loop -->
         <div class="loop-section">
-            <div class="loop-title">終わらない体験のループ (LTV最大化)</div>
+            <div class="loop-title">終わらない体験のループ（UXフロー）</div>
             <div class="loop-flow">
                 <div class="loop-step">
                     <div class="step-icon">🛍️</div>
                     <div class="step-text">1. 買う (物理)</div>
-                    <div class="step-sub">観光地やECで実物を購入</div>
+                    <div class="step-sub">観光地やECで実物の狐面を購入。</div>
                 </div>
                 <div class="arrow">➔</div>
                 <div class="loop-step">
                     <div class="step-icon">✨</div>
                     <div class="step-text">2. かざす (AR)</div>
-                    <div class="step-sub">物語の解放・着せ替え</div>
+                    <div class="step-sub">狐面にスマホをかざし、物語の解放や着せ替えエフェクトを楽しむ。</div>
                 </div>
                 <div class="arrow">➔</div>
                 <div class="loop-step">
                     <div class="step-icon">🔗</div>
                     <div class="step-text">3. 刻む (NFT)</div>
-                    <div class="step-sub">旅の履歴やデザインを記録</div>
+                    <div class="step-sub">自分のオリジナルデザインや、旅の履歴をブロックチェーンに記録する。</div>
                 </div>
                 <div class="arrow">➔</div>
                 <div class="loop-step">
                     <div class="step-icon">🌏</div>
                     <div class="step-text">4. 広がる (全国)</div>
-                    <div class="step-sub">別地域のご当地狐を求めて旅へ</div>
+                    <div class="step-sub">他の地域（愛知、東北など）のご当地狐を求めて、新たな旅へ出る。</div>
                 </div>
             </div>
         </div>
 
         <!-- Roadmap -->
+        <div class="section-title">ロードマップ</div>
         <div class="roadmap-section">
-            <div class="section-title">展開ロードマップ</div>
             <div class="timeline">
                 <div class="phase left">
                     <div class="phase-content">
-                        <span class="phase-tag">Phase 0: 現在〜</span>
-                        <h3>潜入とR&D（京都）</h3>
-                        <!-- 企業名を架空の名称に変更 -->
-                        <p>京都の老舗染工場（仮称：京洛染工）にジョインし、立体物への布プリント（インクジェット/昇華転写）のリアルな限界値とUV展開の最適解を実務から導き出す。</p>
+                        <span class="phase-tag">Phase 0: 現在</span>
+                        <h3>プロトタイプ開発とR&D</h3>
+                        <p>染色技術（インクジェット/昇華転写）と3DモデルのUV展開を掛け合わせた「立体布プリント」のR&Dを実施中。</p>
                     </div>
                 </div>
                 <div class="phase right">
                     <div class="phase-content">
                         <span class="phase-tag">Phase 1: 半年〜1年後</span>
                         <h3>京都オリジンモデル投下</h3>
-                        <p>京都限定の「原点となる狐面」を実店舗等でリリース。ARによる物語展開（柄の発光、キャラの出現）の実証実験を開始。</p>
+                        <p>京都限定の原点となる狐面をリリースし、AR実証実験開始。</p>
                     </div>
                 </div>
                 <div class="phase left">
                     <div class="phase-content">
                         <span class="phase-tag">Phase 2: 1年〜2年後</span>
-                        <h3>Web3コミュニティとカスタム</h3>
-                        <p>NFTを本格実装し、「ユーザーオリジナル柄のプリント受注＆NFT発行（1 of 1）」を開始。所有者限定コミュニティの形成。</p>
+                        <h3>Web3コミュニティとカスタム化</h3>
+                        <p>ユーザーオリジナル柄のプリント受注とNFT発行（1 of 1）を開始。</p>
                     </div>
                 </div>
                 <div class="phase right">
                     <div class="phase-content">
                         <span class="phase-tag">Phase 3: 2年後〜</span>
                         <h3>全国ご当地フランチャイズ化</h3>
-                        <p>「愛知のサイバー稲荷」「東北の伝承雪狐」など、地域固有の物語とデザインを乗せたAR狐面プラットフォームとして全国展開。</p>
+                        <p>「サイバー稲荷」「伝承雪狐」など地域固有の物語で全国展開。</p>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Monetization -->
-        <div class="roadmap-section">
-            <div class="section-title">多元的なマネタイズ構造</div>
-            <div class="monetization-grid">
-                <div class="money-card">
-                    <h4>ハードウェア販売</h4>
-                    <p>狐面本体の販売収益（高単価・実物資産）。インバウンド向けの高利益率商材。</p>
-                </div>
-                <div class="money-card">
-                    <h4>デジタル課金</h4>
-                    <p>AR空間での限定エフェクトや追加ストーリーのアンロック（継続収益・高粗利）。</p>
-                </div>
-                <div class="money-card">
-                    <h4>B2Bライセンス</h4>
-                    <p>各地の観光地やIP（アニメ等）とコラボした限定面の発行ライセンス料。</p>
-                </div>
-                <div class="money-card">
-                    <h4>二次流通ロイヤリティ</h4>
-                    <p>一点モノの面（NFT）がユーザー間で転売された際に自動で入る取引手数料。</p>
-                </div>
+        <div class="section-title">マネタイズ構造</div>
+        <div class="monetization-grid">
+            <div class="money-card">
+                <h4>ハードウェア販売</h4>
+                <p>狐面本体の高単価販売（インバウンド向け）。</p>
+            </div>
+            <div class="money-card">
+                <h4>デジタル課金</h4>
+                <p>AR空間での限定エフェクトや追加ストーリーの販売。</p>
+            </div>
+            <div class="money-card">
+                <h4>B2Bライセンス</h4>
+                <p>観光地やアニメIPとコラボした限定面の発行ライセンス料。</p>
+            </div>
+            <div class="money-card">
+                <h4>二次流通ロイヤリティ</h4>
+                <p>一点モノのNFT面がユーザー間で転売された際の手数料。</p>
             </div>
         </div>
     </div>
