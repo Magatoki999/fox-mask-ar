@@ -48,11 +48,12 @@
             padding-bottom: 20px; 
             display: flex;
             justify-content: center;
-            gap: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
         }
         .btn { 
             pointer-events: auto; 
-            padding: 12px 24px; 
+            padding: 10px 20px; 
             font-size: 0.9rem; 
             font-weight: bold; 
             border-radius: 30px; 
@@ -60,6 +61,12 @@
             transition: all 0.3s ease; 
             letter-spacing: 2px; 
             backdrop-filter: blur(5px);
+        }
+        .btn-normal {
+            background: rgba(255, 255, 255, 0.1); 
+            border: 1px solid #ffffff; 
+            color: #ffffff; 
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.2); 
         }
         .btn-cyber {
             background: rgba(0, 255, 255, 0.1); 
@@ -102,6 +109,7 @@
             <p>Loading Model...</p>
         </div>
         <div class="controls">
+            <button class="btn btn-normal" id="normalBtn">ノーマル</button>
             <button class="btn btn-cyber" id="cyberBtn">サイバー</button>
             <button class="btn btn-kabuki" id="kabukiBtn">歌舞伎</button>
         </div>
@@ -273,6 +281,9 @@
             document.querySelector('.header p').innerText = "Scan Complete. Ready.";
             document.querySelector('.header p').style.color = "#00ff00";
 
+            // 読み込み完了時にUIを初期状態（ノーマル）に更新
+            updateUI();
+
         }, undefined, function(error) {
             console.error('An error happened', error);
             document.querySelector('.header p').innerText = "Error loading 3D model.";
@@ -322,11 +333,15 @@
 
         // --- 7. エフェクト起動ロジック ---
         let currentMode = 'none'; // 'none', 'cyber', 'kabuki'
+        const normalBtn = document.getElementById('normalBtn');
         const cyberBtn = document.getElementById('cyberBtn');
         const kabukiBtn = document.getElementById('kabukiBtn');
 
         function updateUI() {
             // ボタンの見た目を更新
+            normalBtn.style.background = currentMode === 'none' ? "rgba(255, 255, 255, 0.4)" : "rgba(255, 255, 255, 0.1)";
+            normalBtn.style.boxShadow = currentMode === 'none' ? "0 0 20px rgba(255, 255, 255, 0.6)" : "0 0 10px rgba(255, 255, 255, 0.2)";
+
             cyberBtn.style.background = currentMode === 'cyber' ? "rgba(0, 255, 255, 0.4)" : "rgba(0, 255, 255, 0.1)";
             cyberBtn.style.boxShadow = currentMode === 'cyber' ? "0 0 20px rgba(0, 255, 255, 0.6)" : "0 0 10px rgba(0, 255, 255, 0.2)";
             
@@ -343,12 +358,16 @@
             }
         }
 
+        normalBtn.addEventListener('click', () => { 
+            currentMode = 'none'; 
+            updateUI(); 
+        });
         cyberBtn.addEventListener('click', () => { 
-            currentMode = currentMode === 'cyber' ? 'none' : 'cyber'; 
+            currentMode = 'cyber'; 
             updateUI(); 
         });
         kabukiBtn.addEventListener('click', () => { 
-            currentMode = currentMode === 'kabuki' ? 'none' : 'kabuki'; 
+            currentMode = 'kabuki'; 
             updateUI(); 
         });
 
@@ -390,7 +409,7 @@
                 kabukiMat.opacity = 0.4 + Math.sin(time * 1.5) * 0.2;
 
             } else {
-                // 両方とも徐々に消す
+                // 両方とも徐々に消す (ノーマル状態)
                 if (cyberMat.opacity > 0) cyberMat.opacity -= 0.05;
                 if (kabukiMat.opacity > 0) kabukiMat.opacity -= 0.05;
                 if (effectLight.intensity > 0) effectLight.intensity -= 0.1;
