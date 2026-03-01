@@ -87,37 +87,6 @@
             pointer-events: none;
             transition: opacity 0.5s;
         }
-        /* ファイルアップロード用の画面を追加 */
-        #upload-layer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(10, 10, 20, 0.9);
-            z-index: 100;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            backdrop-filter: blur(10px);
-        }
-        .upload-box {
-            border: 2px dashed #00ffff;
-            padding: 40px;
-            border-radius: 20px;
-            text-align: center;
-            background: rgba(0, 255, 255, 0.05);
-        }
-        .upload-box h2 {
-            margin-top: 0;
-            color: #fff;
-            letter-spacing: 2px;
-        }
-        input[type="file"] {
-            margin-top: 20px;
-            color: #00ffff;
-        }
     </style>
     <!-- Three.js (軽量な3Dライブラリ) を読み込み -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -127,19 +96,10 @@
 <body>
     <div id="status">DRAG TO ROTATE</div>
     
-    <!-- ファイルアップロード画面 -->
-    <div id="upload-layer">
-        <div class="upload-box">
-            <h2>3Dモデル(.glb)を読み込む</h2>
-            <p style="color: #aaa; font-size: 0.9rem;">狐面のGLBファイルを選択してください</p>
-            <input type="file" id="glb-upload" accept=".glb,.gltf">
-        </div>
-    </div>
-
     <div id="ui-layer">
         <div class="header">
             <h1>GENKOROKU AR</h1>
-            <p>Scanning Physical Material...</p>
+            <p>Loading Model...</p>
         </div>
         <div class="controls">
             <button class="btn btn-cyber" id="cyberBtn">サイバー</button>
@@ -252,7 +212,7 @@
             depthWrite: false
         });
 
-        // ② 歌舞伎用（★テクスチャ付きに変更）
+        // ② 歌舞伎用（テクスチャ付きに変更）
         const kabukiMat = new THREE.MeshBasicMaterial({
             color: 0xffffff, // テクスチャの色をそのまま出す
             map: kabukiTexture,
@@ -264,72 +224,59 @@
 
         const loader = new THREE.GLTFLoader();
         
-        // ファイル選択時のイベントを追加
-        document.getElementById('glb-upload').addEventListener('change', function(event) {
-            const file = event.target.files[0];
-            if (!file) return;
+        // --- 自動読み込み処理 ---
+        document.querySelector('.header p').style.color = "#ffff00";
 
-            // アップロード画面を非表示にする
-            document.getElementById('upload-layer').style.display = 'none';
-            document.querySelector('.header p').innerText = "Loading Model...";
-            document.querySelector('.header p').style.color = "#ffff00";
+        // 同じ階層にある 'white_fox_mask.glb' を直接指定して読み込む
+        loader.load('./white_fox_mask.glb', function(gltf) {
+            const model = gltf.scene;
 
-            // 選択されたファイルをブラウザ用の一時URLに変換
-            const objectURL = URL.createObjectURL(file);
+            // --- モデルのサイズと位置を自動調整 ---
+            const initialBox = new THREE.Box3().setFromObject(model);
+            const size = initialBox.getSize(new THREE.Vector3());
+            const maxDim = Math.max(size.x, size.y, size.z);
+            const scale = 4.0 / maxDim;
+            model.scale.set(scale, scale, scale);
 
-            // 一時URLからモデルを読み込む
-            loader.load(objectURL, function(gltf) {
-                const model = gltf.scene;
+            const scaledBox = new THREE.Box3().setFromObject(model);
+            const center = scaledBox.getCenter(new THREE.Vector3());
+            model.position.sub(center);
 
-                // --- モデルのサイズと位置を自動調整 ---
-                const initialBox = new THREE.Box3().setFromObject(model);
-                const size = initialBox.getSize(new THREE.Vector3());
-                const maxDim = Math.max(size.x, size.y, size.z);
-                const scale = 4.0 / maxDim;
-                model.scale.set(scale, scale, scale);
-
-                const scaledBox = new THREE.Box3().setFromObject(model);
-                const center = scaledBox.getCenter(new THREE.Vector3());
-                model.position.sub(center);
-
-                // 物理モデル用マテリアルの調整
-                model.traverse((child) => {
-                    if (child.isMesh) {
-                        if(child.material) {
-                            child.material.roughness = 0.8;
-                            child.material.metalness = 0.1;
-                        }
+            // 物理モデル用マテリアルの調整
+            model.traverse((child) => {
+                if (child.isMesh) {
+                    if(child.material) {
+                        child.material.roughness = 0.8;
+                        child.material.metalness = 0.1;
                     }
-                });
-                maskGroup.add(model);
-
-                // --- エフェクト用モデルの生成 ---
-                // ① サイバーモデル
-                const cyberModel = model.clone();
-                cyberModel.traverse((child) => {
-                    if (child.isMesh) child.material = cyberMat;
-                });
-                cyberModel.scale.multiplyScalar(1.01);
-                maskGroup.add(cyberModel);
-
-                // ② 歌舞伎モデル
-                const kabukiModel = model.clone();
-                kabukiModel.traverse((child) => {
-                    if (child.isMesh) child.material = kabukiMat;
-                });
-                kabukiModel.scale.multiplyScalar(1.015); // サイバーより少し外側に浮かせる
-                maskGroup.add(kabukiModel);
-
-                document.querySelector('.header p').innerText = "Scan Complete. Ready.";
-                document.querySelector('.header p').style.color = "#00ff00";
-
-                URL.revokeObjectURL(objectURL);
-
-            }, undefined, function(error) {
-                console.error('An error happened', error);
-                document.querySelector('.header p').innerText = "Error loading 3D model.";
-                document.querySelector('.header p').style.color = "red";
+                }
             });
+            maskGroup.add(model);
+
+            // --- エフェクト用モデルの生成 ---
+            // ① サイバーモデル
+            const cyberModel = model.clone();
+            cyberModel.traverse((child) => {
+                if (child.isMesh) child.material = cyberMat;
+            });
+            cyberModel.scale.multiplyScalar(1.01);
+            maskGroup.add(cyberModel);
+
+            // ② 歌舞伎モデル
+            const kabukiModel = model.clone();
+            kabukiModel.traverse((child) => {
+                if (child.isMesh) child.material = kabukiMat;
+            });
+            kabukiModel.scale.multiplyScalar(1.015); // サイバーより少し外側に浮かせる
+            maskGroup.add(kabukiModel);
+
+            document.querySelector('.header p').innerText = "Scan Complete. Ready.";
+            document.querySelector('.header p').style.color = "#00ff00";
+
+        }, undefined, function(error) {
+            console.error('An error happened', error);
+            document.querySelector('.header p').innerText = "Error loading 3D model.";
+            document.querySelector('.header p').style.color = "red";
         });
 
         // --- 5. パーティクル（光の粒子） ---
