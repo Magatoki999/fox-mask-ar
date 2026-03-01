@@ -155,7 +155,6 @@
     <script>
         // --- 1. 基本設定 ---
         const scene = new THREE.Scene();
-        // 薄暗い霧を設定して空間の奥行きを出す
         scene.fog = new THREE.FogExp2(0x050505, 0.05);
 
         const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
@@ -174,7 +173,6 @@
         directionalLight.position.set(5, 5, 5);
         scene.add(directionalLight);
 
-        // エフェクト用のポイントライト（初期状態は暗い）
         const effectLight = new THREE.PointLight(0x00ffff, 0, 10);
         effectLight.position.set(0, 0, 2);
         scene.add(effectLight);
@@ -183,7 +181,7 @@
         const maskGroup = new THREE.Group();
         scene.add(maskGroup);
 
-        // --- ★歌舞伎風テクスチャの自動生成 ---
+        // --- ★さらに本格化した歌舞伎風テクスチャの自動生成 ---
         function createKabukiTexture() {
             const canvas = document.createElement('canvas');
             canvas.width = 1024;
@@ -194,82 +192,87 @@
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
 
-            // 1. 力強い黒のライン（ベース）
-            ctx.strokeStyle = '#111111';
-            ctx.shadowColor = '#000000';
-            ctx.shadowBlur = 15;
-            for(let i=0; i<3; i++) {
-                ctx.lineWidth = 50 + Math.random() * 40; 
-                const yOffset = i * 220;
+            // 左右対称に描画するためのヘルパー関数
+            function drawSymmetricPath(pathFunc, lineWidth, color, blur = 20) {
+                ctx.lineWidth = lineWidth;
+                ctx.strokeStyle = color;
+                ctx.shadowColor = color;
+                ctx.shadowBlur = blur;
                 
+                // 左側を描画
+                ctx.save();
                 ctx.beginPath();
-                ctx.moveTo(512, 80 + yOffset);
-                ctx.bezierCurveTo(250, 150 + yOffset, 50, 350 + yOffset, 0, 550 + yOffset);
+                pathFunc(ctx);
                 ctx.stroke();
-                
+                ctx.restore();
+
+                // 右側（X軸を反転）を描画
+                ctx.save();
+                ctx.translate(1024, 0);
+                ctx.scale(-1, 1);
                 ctx.beginPath();
-                ctx.moveTo(512, 80 + yOffset);
-                ctx.bezierCurveTo(774, 150 + yOffset, 974, 350 + yOffset, 1024, 550 + yOffset);
+                pathFunc(ctx);
                 ctx.stroke();
+                ctx.restore();
             }
 
-            // 2. 歌舞伎の隈取風の赤いライン
-            ctx.strokeStyle = '#e60000';
-            ctx.shadowColor = '#ff0000';
-            ctx.shadowBlur = 20;
-            for(let i=0; i<4; i++) {
-                ctx.lineWidth = 30 + Math.random() * 30;
-                const yOffset = 50 + i * 200;
-                
-                ctx.beginPath();
-                ctx.moveTo(512, 100 + yOffset);
-                ctx.bezierCurveTo(300, 200 + yOffset, 100, 400 + yOffset, 0, 600 + yOffset);
-                ctx.stroke();
-                
-                ctx.beginPath();
-                ctx.moveTo(512, 100 + yOffset);
-                ctx.bezierCurveTo(724, 200 + yOffset, 924, 400 + yOffset, 1024, 600 + yOffset);
-                ctx.stroke();
-            }
+            // 1. 力強い黒の下地ライン（目の縁取りや頬の影）
+            drawSymmetricPath((ctx) => {
+                // 目尻の跳ね上がり
+                ctx.moveTo(400, 450);
+                ctx.bezierCurveTo(250, 450, 150, 300, 50, 150);
+                // 頬から顎へのライン
+                ctx.moveTo(450, 600);
+                ctx.quadraticCurveTo(300, 700, 100, 850);
+            }, 60, '#111111');
 
-            // 3. アクセントの金のライン
-            ctx.strokeStyle = '#ffcc00';
-            ctx.shadowColor = '#ffaa00';
-            ctx.shadowBlur = 25;
-            ctx.lineWidth = 25; 
-            for(let i=0; i<3; i++) {
-                const yOffset = 150 + i * 250;
-                ctx.beginPath();
-                ctx.moveTo(512, yOffset);
-                ctx.bezierCurveTo(350, yOffset - 50, 150, yOffset + 200, 0, yOffset + 350);
-                ctx.stroke();
-                
-                ctx.beginPath();
-                ctx.moveTo(512, yOffset);
-                ctx.bezierCurveTo(674, yOffset - 50, 874, yOffset + 200, 1024, yOffset + 350);
-                ctx.stroke();
-            }
+            // 2. 本格的な赤い隈取（筋隈）
+            // 額から鼻筋への太いライン
+            drawSymmetricPath((ctx) => {
+                ctx.moveTo(512, 50);
+                ctx.quadraticCurveTo(480, 250, 512, 450);
+            }, 45, '#e60000', 30);
+
+            // 目の周りから上へ向かう力強いカーブ
+            drawSymmetricPath((ctx) => {
+                ctx.moveTo(512, 450);
+                ctx.bezierCurveTo(350, 450, 250, 350, 100, 150);
+            }, 40, '#e60000', 30);
+
+            // 頬の太いカーブ
+            drawSymmetricPath((ctx) => {
+                ctx.moveTo(450, 600);
+                ctx.bezierCurveTo(350, 650, 200, 750, 100, 950);
+            }, 50, '#e60000', 30);
+
+            // 3. アクセントの金の極細ライン（エッジを際立たせる）
+            drawSymmetricPath((ctx) => {
+                ctx.moveTo(512, 450);
+                ctx.bezierCurveTo(350, 450, 250, 350, 100, 150);
+            }, 8, '#ffd700', 15);
+
+            drawSymmetricPath((ctx) => {
+                ctx.moveTo(450, 600);
+                ctx.bezierCurveTo(350, 650, 200, 750, 100, 950);
+            }, 8, '#ffd700', 15);
 
             const texture = new THREE.CanvasTexture(canvas);
+            // 新しいGLBのUVに合わせてリピート設定
             texture.wrapS = THREE.RepeatWrapping;
             texture.wrapT = THREE.RepeatWrapping;
-            texture.repeat.set(2, 2); 
             return texture;
         }
 
-        // --- ★追加：カスタム/NFT用 ジェネレーティブテクスチャの自動生成 ---
-        // 毎回異なるランダムな幾何学模様とグラデーションを生成（一点モノの表現）
+        // --- カスタム/NFT用 ジェネレーティブテクスチャ ---
         function createCustomTexture() {
             const canvas = document.createElement('canvas');
             canvas.width = 1024;
             canvas.height = 1024;
             const ctx = canvas.getContext('2d');
 
-            // ダークパープルの背景
             ctx.fillStyle = '#050010';
             ctx.fillRect(0, 0, 1024, 1024);
 
-            // ランダムな光のオーブ（加算合成）
             ctx.globalCompositeOperation = 'lighter';
             for(let i=0; i<40; i++) {
                 ctx.beginPath();
@@ -277,14 +280,11 @@
                 const y = Math.random() * 1024;
                 const r = Math.random() * 150 + 20;
                 ctx.arc(x, y, r, 0, Math.PI*2);
-                
-                // 紫〜ピンク〜シアンのランダムな色
-                const hue = Math.floor(Math.random() * 80) + 260; // 260-340 range
+                const hue = Math.floor(Math.random() * 80) + 260;
                 ctx.fillStyle = `hsla(${hue}, 80%, 60%, 0.15)`;
                 ctx.fill();
             }
 
-            // 金色のランダムな幾何学ライン（NFT特有のデジタルアート感）
             ctx.globalCompositeOperation = 'source-over';
             ctx.strokeStyle = 'rgba(255, 215, 0, 0.8)';
             ctx.lineWidth = 4;
@@ -301,7 +301,6 @@
             const texture = new THREE.CanvasTexture(canvas);
             texture.wrapS = THREE.RepeatWrapping;
             texture.wrapT = THREE.RepeatWrapping;
-            texture.repeat.set(2, 2); 
             return texture;
         }
 
@@ -309,19 +308,16 @@
         const customTexture = createCustomTexture();
 
         // --- 4. ARエフェクト用マテリアル ---
-        // ① サイバー用
         const cyberMat = new THREE.MeshBasicMaterial({ 
             color: 0x00ffff, wireframe: true, transparent: true, opacity: 0, 
             blending: THREE.AdditiveBlending, depthWrite: false
         });
 
-        // ② 歌舞伎用
         const kabukiMat = new THREE.MeshBasicMaterial({
             color: 0xffffff, map: kabukiTexture, transparent: true, opacity: 0,
             blending: THREE.NormalBlending, depthWrite: false
         });
 
-        // ③ カスタム/NFT用
         const customMat = new THREE.MeshBasicMaterial({
             color: 0xffffff, map: customTexture, transparent: true, opacity: 0,
             blending: THREE.AdditiveBlending, depthWrite: false
@@ -329,7 +325,6 @@
 
         const loader = new THREE.GLTFLoader();
         
-        // --- 自動読み込み処理 ---
         document.querySelector('.header p').style.color = "#ffff00";
 
         // 同じ階層にある 'white_fox_mask.glb' を直接指定して読み込む
@@ -347,11 +342,12 @@
             const center = scaledBox.getCenter(new THREE.Vector3());
             model.position.sub(center);
 
+            // UV展開済みのマテリアル設定を維持しつつ調整
             model.traverse((child) => {
                 if (child.isMesh) {
                     if(child.material) {
-                        child.material.roughness = 0.8;
-                        child.material.metalness = 0.1;
+                        child.material.roughness = 0.7;
+                        child.material.metalness = 0.2;
                     }
                 }
             });
@@ -421,7 +417,7 @@
         });
 
         // --- 7. エフェクト起動ロジック ---
-        let currentMode = 'none'; // 'none', 'cyber', 'kabuki', 'custom'
+        let currentMode = 'none';
         const normalBtn = document.getElementById('normalBtn');
         const cyberBtn = document.getElementById('cyberBtn');
         const kabukiBtn = document.getElementById('kabukiBtn');
@@ -429,7 +425,6 @@
         const nftOverlay = document.getElementById('nft-overlay');
 
         function updateUI() {
-            // ボタンの見た目を更新
             normalBtn.style.background = currentMode === 'none' ? "rgba(255, 255, 255, 0.4)" : "rgba(255, 255, 255, 0.1)";
             normalBtn.style.boxShadow = currentMode === 'none' ? "0 0 20px rgba(255, 255, 255, 0.6)" : "0 0 10px rgba(255, 255, 255, 0.2)";
 
@@ -442,23 +437,21 @@
             customBtn.style.background = currentMode === 'custom' ? "rgba(138, 43, 226, 0.6)" : "rgba(138, 43, 226, 0.2)";
             customBtn.style.boxShadow = currentMode === 'custom' ? "0 0 20px rgba(138, 43, 226, 0.8)" : "0 0 10px rgba(138, 43, 226, 0.3)";
 
-            // NFT UIの表示制御
             if (currentMode === 'custom') {
                 nftOverlay.style.opacity = 1;
             } else {
                 nftOverlay.style.opacity = 0;
             }
 
-            // パーティクルとライトの色をモードに合わせて変更
             if (currentMode === 'cyber') {
-                particleMat.color.setHex(0x00ffff); // シアン
+                particleMat.color.setHex(0x00ffff);
                 effectLight.color.setHex(0x00ffff);
             } else if (currentMode === 'kabuki') {
-                particleMat.color.setHex(0xff0000); // レッド
+                particleMat.color.setHex(0xff0000); 
                 effectLight.color.setHex(0xff0000); 
             } else if (currentMode === 'custom') {
-                particleMat.color.setHex(0xff00ff); // マゼンタパープル
-                effectLight.color.setHex(0x8a2be2); // ディープパープル
+                particleMat.color.setHex(0xff00ff);
+                effectLight.color.setHex(0x8a2be2);
             }
         }
 
@@ -481,7 +474,6 @@
 
             particleMesh.rotation.y = time * 0.1;
 
-            // 起動状態に応じたアニメーション
             if (currentMode === 'cyber') {
                 if (cyberMat.opacity < 0.6) cyberMat.opacity += 0.02;
                 if (kabukiMat.opacity > 0) kabukiMat.opacity -= 0.05;
@@ -510,11 +502,9 @@
                 if (effectLight.intensity < 2) effectLight.intensity += 0.1;
                 if (particleMat.opacity < 0.8) particleMat.opacity += 0.02;
                 
-                // ホログラムが煌めくような演出
                 customMat.opacity = 0.5 + Math.sin(time * 2) * 0.3;
 
             } else {
-                // ノーマル状態
                 if (cyberMat.opacity > 0) cyberMat.opacity -= 0.05;
                 if (kabukiMat.opacity > 0) kabukiMat.opacity -= 0.05;
                 if (customMat.opacity > 0) customMat.opacity -= 0.05;
