@@ -216,45 +216,79 @@
                 ctx.restore();
             }
 
-            // 1. 力強い黒の下地ライン（目の縁取りや頬の影）
+            // 1. 力強い黒の下地ライン（目の縁取りや隈のベース）
             drawSymmetricPath((ctx) => {
-                // 目尻の跳ね上がり
-                ctx.moveTo(400, 450);
-                ctx.bezierCurveTo(250, 450, 150, 300, 50, 150);
-                // 頬から顎へのライン
-                ctx.moveTo(450, 600);
-                ctx.quadraticCurveTo(300, 700, 100, 850);
-            }, 60, '#111111');
+                // 目の縁から斜め上へ
+                ctx.moveTo(440, 450);
+                ctx.bezierCurveTo(350, 380, 250, 300, 100, 200);
+                // 目の下から斜め下へ
+                ctx.moveTo(440, 520);
+                ctx.quadraticCurveTo(300, 600, 80, 650);
+                // 口角から横へ
+                ctx.moveTo(460, 750);
+                ctx.quadraticCurveTo(350, 800, 150, 850);
+            }, 40, '#111111');
 
-            // 2. 本格的な赤い隈取（筋隈）
-            // 額から鼻筋への太いライン
+            // 2. 赤い隈取（メインの筋隈 - より複雑に）
+            
+            // 眉間(額)から左右に割れる角のようなライン
             drawSymmetricPath((ctx) => {
-                ctx.moveTo(512, 50);
-                ctx.quadraticCurveTo(480, 250, 512, 450);
-            }, 45, '#e60000', 30);
+                ctx.moveTo(512, 200);
+                ctx.quadraticCurveTo(450, 150, 350, 100);
+            }, 30, '#e60000', 25);
+            
+            // 額中央から鼻筋へ
+            drawSymmetricPath((ctx) => {
+                ctx.moveTo(512, 150);
+                ctx.quadraticCurveTo(480, 350, 512, 550);
+            }, 35, '#e60000', 25);
 
-            // 目の周りから上へ向かう力強いカーブ
+            // 目頭から額へ上るライン
             drawSymmetricPath((ctx) => {
-                ctx.moveTo(512, 450);
-                ctx.bezierCurveTo(350, 450, 250, 350, 100, 150);
-            }, 40, '#e60000', 30);
+                ctx.moveTo(480, 400);
+                ctx.quadraticCurveTo(450, 300, 350, 200);
+            }, 25, '#e60000', 20);
 
-            // 頬の太いカーブ
+            // 目の上からこめかみへの鋭い跳ね
             drawSymmetricPath((ctx) => {
-                ctx.moveTo(450, 600);
-                ctx.bezierCurveTo(350, 650, 200, 750, 100, 950);
-            }, 50, '#e60000', 30);
+                ctx.moveTo(440, 440);
+                ctx.bezierCurveTo(350, 400, 250, 320, 80, 250);
+            }, 35, '#e60000', 25);
+            
+            // 目の下から外側への跳ね
+            drawSymmetricPath((ctx) => {
+                ctx.moveTo(440, 500);
+                ctx.bezierCurveTo(320, 550, 200, 550, 50, 450);
+            }, 25, '#e60000', 20);
+
+            // 頬の太いカーブ（狐の頬の張りに合わせる）
+            drawSymmetricPath((ctx) => {
+                ctx.moveTo(460, 600);
+                ctx.bezierCurveTo(350, 680, 200, 700, 50, 750);
+            }, 40, '#e60000', 25);
+
+            // 顎付近のライン
+            drawSymmetricPath((ctx) => {
+                ctx.moveTo(480, 800);
+                ctx.quadraticCurveTo(380, 900, 250, 1000);
+            }, 30, '#e60000', 25);
+
 
             // 3. アクセントの金の極細ライン（エッジを際立たせる）
             drawSymmetricPath((ctx) => {
-                ctx.moveTo(512, 450);
-                ctx.bezierCurveTo(350, 450, 250, 350, 100, 150);
-            }, 8, '#ffd700', 15);
+                ctx.moveTo(440, 440);
+                ctx.bezierCurveTo(350, 400, 250, 320, 80, 250);
+            }, 6, '#ffd700', 10);
 
             drawSymmetricPath((ctx) => {
-                ctx.moveTo(450, 600);
-                ctx.bezierCurveTo(350, 650, 200, 750, 100, 950);
-            }, 8, '#ffd700', 15);
+                ctx.moveTo(460, 600);
+                ctx.bezierCurveTo(350, 680, 200, 700, 50, 750);
+            }, 6, '#ffd700', 10);
+            
+            drawSymmetricPath((ctx) => {
+                ctx.moveTo(512, 150);
+                ctx.quadraticCurveTo(480, 350, 512, 550);
+            }, 6, '#ffd700', 10);
 
             const texture = new THREE.CanvasTexture(canvas);
             // 新しいGLBのUVに合わせてリピート設定
