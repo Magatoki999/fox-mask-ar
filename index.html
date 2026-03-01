@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>幻狐録 ARシミュレーター</title>
+    <style>
+        body { 
+            margin: 0; 
+            overflow: hidden; 
+            background-color: #050505; 
+            background-image: radial-gradient(circle at center, #1a1a2e 0%, #000000 100%);
+            color: white; 
+            font-family: 'Helvetica Neue', Arial, sans-serif; 
+            touch-action: none; 
+        }
+        #ui-layer { 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            pointer-events: none; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: space-between; 
+            padding: 30px 20px; 
+            box-sizing: border-box; 
+        }
+        .header { 
+            text-align: center; 
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8); 
+        }
+        .header h1 { 
+            margin: 0; 
+            font-size: 1.2rem; 
+            letter-spacing: 3px; 
+            color: #fff;
+        }
+        .header p { 
+            margin: 5px 0 0; 
+            font-size: 0.8rem; 
+            color: #00ffff; 
+            letter-spacing: 1px;
+        }
+        .controls { 
+            text-align: center; 
+            padding-bottom: 20px; 
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+        .btn { 
+            pointer-events: auto; 
+            padding: 12px 24px; 
+            font-size: 0.9rem; 
+            font-weight: bold; 
+            border-radius: 30px; 
+            cursor: pointer; 
+            transition: all 0.3s ease; 
+            letter-spacing: 2px; 
+            backdrop-filter: blur(5px);
+        }
+        .btn-cyber {
+            background: rgba(0, 255, 255, 0.1); 
+            border: 1px solid #00ffff; 
+            color: #00ffff; 
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.2); 
+        }
+        .btn-kabuki {
+            background: rgba(255, 50, 50, 0.1); 
+            border: 1px solid #ff3333; 
+            color: #ff3333; 
+            box-shadow: 0 0 10px rgba(255, 50, 50, 0.2); 
+        }
+        .btn:active { 
+            transform: scale(0.95);
+        }
+        #status {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 0.9rem;
+            color: rgba(255,255,255,0.5);
+            letter-spacing: 2px;
+            pointer-events: none;
+            transition: opacity 0.5s;
+        }
+        /* ファイルアップロード用の画面を追加 */
+        #upload-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 10, 20, 0.9);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(10px);
+        }
+        .upload-box {
+            border: 2px dashed #00ffff;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            background: rgba(0, 255, 255, 0.05);
+        }
+        .upload-box h2 {
+            margin-top: 0;
+            color: #fff;
+            letter-spacing: 2px;
+        }
+        input[type="file"] {
+            margin-top: 20px;
+            color: #00ffff;
+        }
+    </style>
+    <!-- Three.js (軽量な3Dライブラリ) を読み込み -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- GLTFLoader (GLBモデル読み込み用) を追加 -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+</head>
+<body>
+    <div id="status">DRAG TO ROTATE</div>
+    
+    <!-- ファイルアップロード画面 -->
+    <div id="upload-layer">
+        <div class="upload-box">
+            <h2>3Dモデル(.glb)を読み込む</h2>
+            <p style="color: #aaa; font-size: 0.9rem;">狐面のGLBファイルを選択してください</p>
+            <input type="file" id="glb-upload" accept=".glb,.gltf">
+        </div>
+    </div>
+
+    <div id="ui-layer">
+        <div class="header">
+            <h1>GENKOROKU AR</h1>
+            <p>Scanning Physical Material...</p>
+        </div>
+        <div class="controls">
+            <button class="btn btn-cyber" id="cyberBtn">サイバー</button>
+            <button class="btn btn-kabuki" id="kabukiBtn">歌舞伎</button>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. 基本設定 ---
+        const scene = new THREE.Scene();
+        // 薄暗い霧を設定して空間の奥行きを出す
+        scene.fog = new THREE.FogExp2(0x050505, 0.05);
+
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.set(0, 0, 8);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        document.body.appendChild(renderer.domElement);
+
+        // --- 2. 照明 ---
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambientLight);
+
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        directionalLight.position.set(5, 5, 5);
+        scene.add(directionalLight);
+
+        // エフェクト用のポイントライト（初期状態は暗い）
+        const effectLight = new THREE.PointLight(0x00ffff, 0, 10);
+        effectLight.position.set(0, 0, 2);
+        scene.add(effectLight);
+
+        // --- 3. 狐面モデル(GLB)の読み込み ---
+        const maskGroup = new THREE.Group();
+        scene.add(maskGroup);
+
+        // --- ★追加: 歌舞伎風テクスチャの自動生成 ---
+        function createKabukiTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 1024;
+            canvas.height = 1024;
+            const ctx = canvas.getContext('2d');
+
+            // 背景は黒（加算合成で透明になるようにする）
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, 1024, 1024);
+
+            // 歌舞伎の隈取（くまどり）風の赤いライン
+            ctx.strokeStyle = '#ff1111';
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.shadowColor = '#ff0000';
+            ctx.shadowBlur = 15;
+
+            // 左右対称に力強い筆のようになぞる
+            for(let i=0; i<5; i++) {
+                ctx.lineWidth = 30 + Math.random() * 40;
+                const yOffset = i * 200;
+                
+                // 左側の模様
+                ctx.beginPath();
+                ctx.moveTo(512, 100 + yOffset);
+                ctx.bezierCurveTo(300, 200 + yOffset, 100, 400 + yOffset, 0, 600 + yOffset);
+                ctx.stroke();
+                
+                // 右側の模様
+                ctx.beginPath();
+                ctx.moveTo(512, 100 + yOffset);
+                ctx.bezierCurveTo(724, 200 + yOffset, 924, 400 + yOffset, 1024, 600 + yOffset);
+                ctx.stroke();
+            }
+
+            // アクセントの金のライン
+            ctx.strokeStyle = '#ffd700';
+            ctx.shadowColor = '#ffd700';
+            ctx.lineWidth = 8;
+            for(let i=0; i<4; i++) {
+                const yOffset = 150 + i * 250;
+                ctx.beginPath();
+                ctx.moveTo(512, yOffset);
+                ctx.bezierCurveTo(300, yOffset - 100, 100, yOffset + 200, 0, yOffset + 300);
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.moveTo(512, yOffset);
+                ctx.bezierCurveTo(724, yOffset - 100, 924, yOffset + 200, 1024, yOffset + 300);
+                ctx.stroke();
+            }
+
+            const texture = new THREE.CanvasTexture(canvas);
+            // どんな形状のモデルでもそれっぽく見えるようにリピート設定
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.wrapT = THREE.RepeatWrapping;
+            texture.repeat.set(2, 2); 
+            return texture;
+        }
+
+        const kabukiTexture = createKabukiTexture();
+
+        // --- 4. ARエフェクト用マテリアル ---
+        // ① サイバー用（水色のワイヤーフレーム）
+        const cyberMat = new THREE.MeshBasicMaterial({ 
+            color: 0x00ffff, 
+            wireframe: true, 
+            transparent: true, 
+            opacity: 0, 
+            blending: THREE.AdditiveBlending,
+            depthWrite: false
+        });
+
+        // ② 歌舞伎用（★テクスチャ付きに変更）
+        const kabukiMat = new THREE.MeshBasicMaterial({
+            color: 0xffffff, // テクスチャの色をそのまま出す
+            map: kabukiTexture,
+            transparent: true,
+            opacity: 0,
+            blending: THREE.AdditiveBlending, // 黒い部分は透明になり、赤と金が光る
+            depthWrite: false
+        });
+
+        const loader = new THREE.GLTFLoader();
+        
+        // ファイル選択時のイベントを追加
+        document.getElementById('glb-upload').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // アップロード画面を非表示にする
+            document.getElementById('upload-layer').style.display = 'none';
+            document.querySelector('.header p').innerText = "Loading Model...";
+            document.querySelector('.header p').style.color = "#ffff00";
+
+            // 選択されたファイルをブラウザ用の一時URLに変換
+            const objectURL = URL.createObjectURL(file);
+
+            // 一時URLからモデルを読み込む
+            loader.load(objectURL, function(gltf) {
+                const model = gltf.scene;
+
+                // --- モデルのサイズと位置を自動調整 ---
+                const initialBox = new THREE.Box3().setFromObject(model);
+                const size = initialBox.getSize(new THREE.Vector3());
+                const maxDim = Math.max(size.x, size.y, size.z);
+                const scale = 4.0 / maxDim;
+                model.scale.set(scale, scale, scale);
+
+                const scaledBox = new THREE.Box3().setFromObject(model);
+                const center = scaledBox.getCenter(new THREE.Vector3());
+                model.position.sub(center);
+
+                // 物理モデル用マテリアルの調整
+                model.traverse((child) => {
+                    if (child.isMesh) {
+                        if(child.material) {
+                            child.material.roughness = 0.8;
+                            child.material.metalness = 0.1;
+                        }
+                    }
+                });
+                maskGroup.add(model);
+
+                // --- エフェクト用モデルの生成 ---
+                // ① サイバーモデル
+                const cyberModel = model.clone();
+                cyberModel.traverse((child) => {
+                    if (child.isMesh) child.material = cyberMat;
+                });
+                cyberModel.scale.multiplyScalar(1.01);
+                maskGroup.add(cyberModel);
+
+                // ② 歌舞伎モデル
+                const kabukiModel = model.clone();
+                kabukiModel.traverse((child) => {
+                    if (child.isMesh) child.material = kabukiMat;
+                });
+                kabukiModel.scale.multiplyScalar(1.015); // サイバーより少し外側に浮かせる
+                maskGroup.add(kabukiModel);
+
+                document.querySelector('.header p').innerText = "Scan Complete. Ready.";
+                document.querySelector('.header p').style.color = "#00ff00";
+
+                URL.revokeObjectURL(objectURL);
+
+            }, undefined, function(error) {
+                console.error('An error happened', error);
+                document.querySelector('.header p').innerText = "Error loading 3D model.";
+                document.querySelector('.header p').style.color = "red";
+            });
+        });
+
+        // --- 5. パーティクル（光の粒子） ---
+        const particleGeo = new THREE.BufferGeometry();
+        const particleCount = 200;
+        const posArray = new Float32Array(particleCount * 3);
+        for(let i = 0; i < particleCount * 3; i++) {
+            posArray[i] = (Math.random() - 0.5) * 10;
+        }
+        particleGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        const particleMat = new THREE.PointsMaterial({
+            size: 0.05,
+            color: 0x00ffff,
+            transparent: true,
+            opacity: 0,
+            blending: THREE.AdditiveBlending
+        });
+        const particleMesh = new THREE.Points(particleGeo, particleMat);
+        scene.add(particleMesh);
+
+        // --- 6. インタラクション（マウス/タッチで回す） ---
+        let isDragging = false;
+        let previousMousePosition = { x: 0, y: 0 };
+
+        document.addEventListener('pointerdown', (e) => {
+            // UIのボタンクリック時はドラッグと判定しない
+            if(e.target.classList.contains('btn')) return;
+            isDragging = true;
+            document.getElementById('status').style.opacity = 0;
+        });
+        document.addEventListener('pointerup', () => isDragging = false);
+        document.addEventListener('pointermove', (e) => {
+            if (isDragging) {
+                const deltaMove = {
+                    x: e.offsetX - previousMousePosition.x,
+                    y: e.offsetY - previousMousePosition.y
+                };
+                maskGroup.rotation.y += deltaMove.x * 0.01;
+                maskGroup.rotation.x += deltaMove.y * 0.01;
+            }
+            previousMousePosition = { x: e.offsetX, y: e.offsetY };
+        });
+
+        // --- 7. エフェクト起動ロジック ---
+        let currentMode = 'none'; // 'none', 'cyber', 'kabuki'
+        const cyberBtn = document.getElementById('cyberBtn');
+        const kabukiBtn = document.getElementById('kabukiBtn');
+
+        function updateUI() {
+            // ボタンの見た目を更新
+            cyberBtn.style.background = currentMode === 'cyber' ? "rgba(0, 255, 255, 0.4)" : "rgba(0, 255, 255, 0.1)";
+            cyberBtn.style.boxShadow = currentMode === 'cyber' ? "0 0 20px rgba(0, 255, 255, 0.6)" : "0 0 10px rgba(0, 255, 255, 0.2)";
+            
+            kabukiBtn.style.background = currentMode === 'kabuki' ? "rgba(255, 50, 50, 0.4)" : "rgba(255, 50, 50, 0.1)";
+            kabukiBtn.style.boxShadow = currentMode === 'kabuki' ? "0 0 20px rgba(255, 50, 50, 0.6)" : "0 0 10px rgba(255, 50, 50, 0.2)";
+
+            // パーティクルとライトの色をモードに合わせて変更
+            if (currentMode === 'cyber') {
+                particleMat.color.setHex(0x00ffff); // シアン
+                effectLight.color.setHex(0x00ffff);
+            } else if (currentMode === 'kabuki') {
+                particleMat.color.setHex(0xffd700); // ゴールド
+                effectLight.color.setHex(0xff0000); // レッド
+            }
+        }
+
+        cyberBtn.addEventListener('click', () => { 
+            currentMode = currentMode === 'cyber' ? 'none' : 'cyber'; 
+            updateUI(); 
+        });
+        kabukiBtn.addEventListener('click', () => { 
+            currentMode = currentMode === 'kabuki' ? 'none' : 'kabuki'; 
+            updateUI(); 
+        });
+
+        // --- 8. アニメーションループ ---
+        const clock = new THREE.Clock();
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const time = clock.getElapsedTime();
+
+            if (!isDragging) {
+                maskGroup.rotation.y += 0.005;
+                maskGroup.rotation.x += (0 - maskGroup.rotation.x) * 0.05;
+            }
+
+            particleMesh.rotation.y = time * 0.1;
+
+            // 起動状態に応じたアニメーション
+            if (currentMode === 'cyber') {
+                // サイバー表示、歌舞伎非表示
+                if (cyberMat.opacity < 0.6) cyberMat.opacity += 0.02;
+                if (kabukiMat.opacity > 0) kabukiMat.opacity -= 0.05;
+                
+                if (effectLight.intensity < 2) effectLight.intensity += 0.1;
+                if (particleMat.opacity < 0.8) particleMat.opacity += 0.02;
+                
+                // ワイヤーフレームを速く脈打たせる
+                cyberMat.opacity = 0.4 + Math.sin(time * 3) * 0.2;
+
+            } else if (currentMode === 'kabuki') {
+                // 歌舞伎表示、サイバー非表示
+                if (kabukiMat.opacity < 0.6) kabukiMat.opacity += 0.02;
+                if (cyberMat.opacity > 0) cyberMat.opacity -= 0.05;
+                
+                if (effectLight.intensity < 2) effectLight.intensity += 0.1;
+                if (particleMat.opacity < 0.8) particleMat.opacity += 0.02;
+                
+                // オーラをゆっくり重厚に脈打たせる
+                kabukiMat.opacity = 0.4 + Math.sin(time * 1.5) * 0.2;
+
+            } else {
+                // 両方とも徐々に消す
+                if (cyberMat.opacity > 0) cyberMat.opacity -= 0.05;
+                if (kabukiMat.opacity > 0) kabukiMat.opacity -= 0.05;
+                if (effectLight.intensity > 0) effectLight.intensity -= 0.1;
+                if (particleMat.opacity > 0) particleMat.opacity -= 0.05;
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        // ウィンドウリサイズ対応
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // アニメーション開始
+        window.onload = function() {
+            animate();
+        };
+    </script>
+</body>
+</html>
