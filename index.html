@@ -75,7 +75,7 @@
             box-shadow: 0 0 10px rgba(0, 255, 255, 0.2); 
         }
         .btn-kabuki {
-            background: rgba(255, 50, 50, 0.1); 
+            background: rgba(30, 0, 0, 0.6); 
             border: 1px solid #ff3333; 
             color: #ff3333; 
             box-shadow: 0 0 10px rgba(255, 50, 50, 0.2); 
@@ -153,21 +153,40 @@
             canvas.height = 1024;
             const ctx = canvas.getContext('2d');
 
-            // 背景は黒（加算合成で透明になるようにする）
-            ctx.fillStyle = '#000000';
-            ctx.fillRect(0, 0, 1024, 1024);
+            // 黒色を表現するため、背景は透明にする
+            ctx.clearRect(0, 0, 1024, 1024);
 
-            // 歌舞伎の隈取（くまどり）風の赤いライン
-            ctx.strokeStyle = '#ff1111';
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
-            ctx.shadowColor = '#ff0000';
-            ctx.shadowBlur = 15;
 
-            // 左右対称に力強い筆のようになぞる
-            for(let i=0; i<5; i++) {
-                ctx.lineWidth = 30 + Math.random() * 40;
-                const yOffset = i * 200;
+            // 1. 力強い黒のライン（ベース）
+            ctx.strokeStyle = '#111111';
+            ctx.shadowColor = '#000000';
+            ctx.shadowBlur = 15;
+            for(let i=0; i<3; i++) {
+                ctx.lineWidth = 50 + Math.random() * 40; // 黒は太めに
+                const yOffset = i * 220;
+                
+                // 左側の模様
+                ctx.beginPath();
+                ctx.moveTo(512, 80 + yOffset);
+                ctx.bezierCurveTo(250, 150 + yOffset, 50, 350 + yOffset, 0, 550 + yOffset);
+                ctx.stroke();
+                
+                // 右側の模様
+                ctx.beginPath();
+                ctx.moveTo(512, 80 + yOffset);
+                ctx.bezierCurveTo(774, 150 + yOffset, 974, 350 + yOffset, 1024, 550 + yOffset);
+                ctx.stroke();
+            }
+
+            // 2. 歌舞伎の隈取（くまどり）風の赤いライン
+            ctx.strokeStyle = '#e60000';
+            ctx.shadowColor = '#ff0000';
+            ctx.shadowBlur = 20;
+            for(let i=0; i<4; i++) {
+                ctx.lineWidth = 30 + Math.random() * 30;
+                const yOffset = 50 + i * 200;
                 
                 // 左側の模様
                 ctx.beginPath();
@@ -182,20 +201,21 @@
                 ctx.stroke();
             }
 
-            // アクセントの金のライン
-            ctx.strokeStyle = '#ffd700';
-            ctx.shadowColor = '#ffd700';
-            ctx.lineWidth = 8;
-            for(let i=0; i<4; i++) {
+            // 3. アクセントの金のライン（太く強調）
+            ctx.strokeStyle = '#ffcc00';
+            ctx.shadowColor = '#ffaa00';
+            ctx.shadowBlur = 25;
+            ctx.lineWidth = 25; // 以前の8から大幅に太く
+            for(let i=0; i<3; i++) {
                 const yOffset = 150 + i * 250;
                 ctx.beginPath();
                 ctx.moveTo(512, yOffset);
-                ctx.bezierCurveTo(300, yOffset - 100, 100, yOffset + 200, 0, yOffset + 300);
+                ctx.bezierCurveTo(350, yOffset - 50, 150, yOffset + 200, 0, yOffset + 350);
                 ctx.stroke();
                 
                 ctx.beginPath();
                 ctx.moveTo(512, yOffset);
-                ctx.bezierCurveTo(724, yOffset - 100, 924, yOffset + 200, 1024, yOffset + 300);
+                ctx.bezierCurveTo(674, yOffset - 50, 874, yOffset + 200, 1024, yOffset + 350);
                 ctx.stroke();
             }
 
@@ -220,13 +240,13 @@
             depthWrite: false
         });
 
-        // ② 歌舞伎用（テクスチャ付きに変更）
+        // ② 歌舞伎用（赤と黒を活かすため NormalBlending に変更）
         const kabukiMat = new THREE.MeshBasicMaterial({
-            color: 0xffffff, // テクスチャの色をそのまま出す
+            color: 0xffffff, 
             map: kabukiTexture,
             transparent: true,
             opacity: 0,
-            blending: THREE.AdditiveBlending, // 黒い部分は透明になり、赤と金が光る
+            blending: THREE.NormalBlending, // 黒も描画されるようになる
             depthWrite: false
         });
 
@@ -345,15 +365,16 @@
             cyberBtn.style.background = currentMode === 'cyber' ? "rgba(0, 255, 255, 0.4)" : "rgba(0, 255, 255, 0.1)";
             cyberBtn.style.boxShadow = currentMode === 'cyber' ? "0 0 20px rgba(0, 255, 255, 0.6)" : "0 0 10px rgba(0, 255, 255, 0.2)";
             
-            kabukiBtn.style.background = currentMode === 'kabuki' ? "rgba(255, 50, 50, 0.4)" : "rgba(255, 50, 50, 0.1)";
-            kabukiBtn.style.boxShadow = currentMode === 'kabuki' ? "0 0 20px rgba(255, 50, 50, 0.6)" : "0 0 10px rgba(255, 50, 50, 0.2)";
+            // 歌舞伎ボタンも赤と黒を基調としたデザインに
+            kabukiBtn.style.background = currentMode === 'kabuki' ? "rgba(200, 0, 0, 0.6)" : "rgba(30, 0, 0, 0.6)";
+            kabukiBtn.style.boxShadow = currentMode === 'kabuki' ? "0 0 20px rgba(255, 0, 0, 0.8)" : "0 0 10px rgba(255, 50, 50, 0.2)";
 
             // パーティクルとライトの色をモードに合わせて変更
             if (currentMode === 'cyber') {
                 particleMat.color.setHex(0x00ffff); // シアン
                 effectLight.color.setHex(0x00ffff);
             } else if (currentMode === 'kabuki') {
-                particleMat.color.setHex(0xffd700); // ゴールド
+                particleMat.color.setHex(0xff0000); // パーティクルも赤に変更
                 effectLight.color.setHex(0xff0000); // レッド
             }
         }
@@ -399,14 +420,14 @@
 
             } else if (currentMode === 'kabuki') {
                 // 歌舞伎表示、サイバー非表示
-                if (kabukiMat.opacity < 0.6) kabukiMat.opacity += 0.02;
+                if (kabukiMat.opacity < 0.8) kabukiMat.opacity += 0.02;
                 if (cyberMat.opacity > 0) cyberMat.opacity -= 0.05;
                 
                 if (effectLight.intensity < 2) effectLight.intensity += 0.1;
                 if (particleMat.opacity < 0.8) particleMat.opacity += 0.02;
                 
-                // オーラをゆっくり重厚に脈打たせる
-                kabukiMat.opacity = 0.4 + Math.sin(time * 1.5) * 0.2;
+                // 模様をゆっくり重厚に脈打たせる
+                kabukiMat.opacity = 0.6 + Math.sin(time * 1.5) * 0.2;
 
             } else {
                 // 両方とも徐々に消す (ノーマル状態)
