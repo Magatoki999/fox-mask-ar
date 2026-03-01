@@ -80,6 +80,12 @@
             color: #ff3333; 
             box-shadow: 0 0 10px rgba(255, 50, 50, 0.2); 
         }
+        .btn-custom {
+            background: rgba(138, 43, 226, 0.2); 
+            border: 1px solid #9932cc; 
+            color: #e0b0ff; 
+            box-shadow: 0 0 10px rgba(138, 43, 226, 0.3); 
+        }
         .btn:active { 
             transform: scale(0.95);
         }
@@ -94,6 +100,31 @@
             pointer-events: none;
             transition: opacity 0.5s;
         }
+        /* NFT用のオーバーレイUI */
+        #nft-overlay {
+            position: absolute;
+            top: 25%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(20, 10, 30, 0.8);
+            border: 1px solid #ffd700;
+            color: #ffd700;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+            opacity: 0;
+            transition: opacity 0.5s;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .nft-icon {
+            font-size: 1.4rem;
+        }
     </style>
     <!-- Three.js (軽量な3Dライブラリ) を読み込み -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -103,6 +134,11 @@
 <body>
     <div id="status">DRAG TO ROTATE</div>
     
+    <div id="nft-overlay">
+        <span class="nft-icon">💎</span>
+        <span>1 of 1 Unique Design<br><small style="color:#aaa;">NFT Minting Ready...</small></span>
+    </div>
+
     <div id="ui-layer">
         <div class="header">
             <h1>GENKOROKU AR</h1>
@@ -112,6 +148,7 @@
             <button class="btn btn-normal" id="normalBtn">ノーマル</button>
             <button class="btn btn-cyber" id="cyberBtn">サイバー</button>
             <button class="btn btn-kabuki" id="kabukiBtn">歌舞伎</button>
+            <button class="btn btn-custom" id="customBtn">カスタム/NFT</button>
         </div>
     </div>
 
@@ -146,16 +183,14 @@
         const maskGroup = new THREE.Group();
         scene.add(maskGroup);
 
-        // --- ★追加: 歌舞伎風テクスチャの自動生成 ---
+        // --- ★歌舞伎風テクスチャの自動生成 ---
         function createKabukiTexture() {
             const canvas = document.createElement('canvas');
             canvas.width = 1024;
             canvas.height = 1024;
             const ctx = canvas.getContext('2d');
 
-            // 黒色を表現するため、背景は透明にする
             ctx.clearRect(0, 0, 1024, 1024);
-
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
 
@@ -164,23 +199,21 @@
             ctx.shadowColor = '#000000';
             ctx.shadowBlur = 15;
             for(let i=0; i<3; i++) {
-                ctx.lineWidth = 50 + Math.random() * 40; // 黒は太めに
+                ctx.lineWidth = 50 + Math.random() * 40; 
                 const yOffset = i * 220;
                 
-                // 左側の模様
                 ctx.beginPath();
                 ctx.moveTo(512, 80 + yOffset);
                 ctx.bezierCurveTo(250, 150 + yOffset, 50, 350 + yOffset, 0, 550 + yOffset);
                 ctx.stroke();
                 
-                // 右側の模様
                 ctx.beginPath();
                 ctx.moveTo(512, 80 + yOffset);
                 ctx.bezierCurveTo(774, 150 + yOffset, 974, 350 + yOffset, 1024, 550 + yOffset);
                 ctx.stroke();
             }
 
-            // 2. 歌舞伎の隈取（くまどり）風の赤いライン
+            // 2. 歌舞伎の隈取風の赤いライン
             ctx.strokeStyle = '#e60000';
             ctx.shadowColor = '#ff0000';
             ctx.shadowBlur = 20;
@@ -188,24 +221,22 @@
                 ctx.lineWidth = 30 + Math.random() * 30;
                 const yOffset = 50 + i * 200;
                 
-                // 左側の模様
                 ctx.beginPath();
                 ctx.moveTo(512, 100 + yOffset);
                 ctx.bezierCurveTo(300, 200 + yOffset, 100, 400 + yOffset, 0, 600 + yOffset);
                 ctx.stroke();
                 
-                // 右側の模様
                 ctx.beginPath();
                 ctx.moveTo(512, 100 + yOffset);
                 ctx.bezierCurveTo(724, 200 + yOffset, 924, 400 + yOffset, 1024, 600 + yOffset);
                 ctx.stroke();
             }
 
-            // 3. アクセントの金のライン（太く強調）
+            // 3. アクセントの金のライン
             ctx.strokeStyle = '#ffcc00';
             ctx.shadowColor = '#ffaa00';
             ctx.shadowBlur = 25;
-            ctx.lineWidth = 25; // 以前の8から大幅に太く
+            ctx.lineWidth = 25; 
             for(let i=0; i<3; i++) {
                 const yOffset = 150 + i * 250;
                 ctx.beginPath();
@@ -220,7 +251,54 @@
             }
 
             const texture = new THREE.CanvasTexture(canvas);
-            // どんな形状のモデルでもそれっぽく見えるようにリピート設定
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.wrapT = THREE.RepeatWrapping;
+            texture.repeat.set(2, 2); 
+            return texture;
+        }
+
+        // --- ★追加：カスタム/NFT用 ジェネレーティブテクスチャの自動生成 ---
+        // 毎回異なるランダムな幾何学模様とグラデーションを生成（一点モノの表現）
+        function createCustomTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 1024;
+            canvas.height = 1024;
+            const ctx = canvas.getContext('2d');
+
+            // ダークパープルの背景
+            ctx.fillStyle = '#050010';
+            ctx.fillRect(0, 0, 1024, 1024);
+
+            // ランダムな光のオーブ（加算合成）
+            ctx.globalCompositeOperation = 'lighter';
+            for(let i=0; i<40; i++) {
+                ctx.beginPath();
+                const x = Math.random() * 1024;
+                const y = Math.random() * 1024;
+                const r = Math.random() * 150 + 20;
+                ctx.arc(x, y, r, 0, Math.PI*2);
+                
+                // 紫〜ピンク〜シアンのランダムな色
+                const hue = Math.floor(Math.random() * 80) + 260; // 260-340 range
+                ctx.fillStyle = `hsla(${hue}, 80%, 60%, 0.15)`;
+                ctx.fill();
+            }
+
+            // 金色のランダムな幾何学ライン（NFT特有のデジタルアート感）
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.strokeStyle = 'rgba(255, 215, 0, 0.8)';
+            ctx.lineWidth = 4;
+            ctx.shadowColor = '#ffd700';
+            ctx.shadowBlur = 10;
+            
+            for(let i=0; i<30; i++) {
+                ctx.beginPath();
+                ctx.moveTo(Math.random()*1024, Math.random()*1024);
+                ctx.lineTo(Math.random()*1024, Math.random()*1024);
+                ctx.stroke();
+            }
+
+            const texture = new THREE.CanvasTexture(canvas);
             texture.wrapS = THREE.RepeatWrapping;
             texture.wrapT = THREE.RepeatWrapping;
             texture.repeat.set(2, 2); 
@@ -228,26 +306,25 @@
         }
 
         const kabukiTexture = createKabukiTexture();
+        const customTexture = createCustomTexture();
 
         // --- 4. ARエフェクト用マテリアル ---
-        // ① サイバー用（水色のワイヤーフレーム）
+        // ① サイバー用
         const cyberMat = new THREE.MeshBasicMaterial({ 
-            color: 0x00ffff, 
-            wireframe: true, 
-            transparent: true, 
-            opacity: 0, 
-            blending: THREE.AdditiveBlending,
-            depthWrite: false
+            color: 0x00ffff, wireframe: true, transparent: true, opacity: 0, 
+            blending: THREE.AdditiveBlending, depthWrite: false
         });
 
-        // ② 歌舞伎用（赤と黒を活かすため NormalBlending に変更）
+        // ② 歌舞伎用
         const kabukiMat = new THREE.MeshBasicMaterial({
-            color: 0xffffff, 
-            map: kabukiTexture,
-            transparent: true,
-            opacity: 0,
-            blending: THREE.NormalBlending, // 黒も描画されるようになる
-            depthWrite: false
+            color: 0xffffff, map: kabukiTexture, transparent: true, opacity: 0,
+            blending: THREE.NormalBlending, depthWrite: false
+        });
+
+        // ③ カスタム/NFT用
+        const customMat = new THREE.MeshBasicMaterial({
+            color: 0xffffff, map: customTexture, transparent: true, opacity: 0,
+            blending: THREE.AdditiveBlending, depthWrite: false
         });
 
         const loader = new THREE.GLTFLoader();
@@ -259,7 +336,7 @@
         loader.load('./white_fox_mask.glb', function(gltf) {
             const model = gltf.scene;
 
-            // --- モデルのサイズと位置を自動調整 ---
+            // モデルのサイズと位置を自動調整
             const initialBox = new THREE.Box3().setFromObject(model);
             const size = initialBox.getSize(new THREE.Vector3());
             const maxDim = Math.max(size.x, size.y, size.z);
@@ -270,7 +347,6 @@
             const center = scaledBox.getCenter(new THREE.Vector3());
             model.position.sub(center);
 
-            // 物理モデル用マテリアルの調整
             model.traverse((child) => {
                 if (child.isMesh) {
                     if(child.material) {
@@ -282,26 +358,24 @@
             maskGroup.add(model);
 
             // --- エフェクト用モデルの生成 ---
-            // ① サイバーモデル
             const cyberModel = model.clone();
-            cyberModel.traverse((child) => {
-                if (child.isMesh) child.material = cyberMat;
-            });
+            cyberModel.traverse((child) => { if (child.isMesh) child.material = cyberMat; });
             cyberModel.scale.multiplyScalar(1.01);
             maskGroup.add(cyberModel);
 
-            // ② 歌舞伎モデル
             const kabukiModel = model.clone();
-            kabukiModel.traverse((child) => {
-                if (child.isMesh) child.material = kabukiMat;
-            });
-            kabukiModel.scale.multiplyScalar(1.015); // サイバーより少し外側に浮かせる
+            kabukiModel.traverse((child) => { if (child.isMesh) child.material = kabukiMat; });
+            kabukiModel.scale.multiplyScalar(1.015);
             maskGroup.add(kabukiModel);
+
+            const customModel = model.clone();
+            customModel.traverse((child) => { if (child.isMesh) child.material = customMat; });
+            customModel.scale.multiplyScalar(1.015);
+            maskGroup.add(customModel);
 
             document.querySelector('.header p').innerText = "Scan Complete. Ready.";
             document.querySelector('.header p').style.color = "#00ff00";
 
-            // 読み込み完了時にUIを初期状態（ノーマル）に更新
             updateUI();
 
         }, undefined, function(error) {
@@ -319,11 +393,7 @@
         }
         particleGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
         const particleMat = new THREE.PointsMaterial({
-            size: 0.05,
-            color: 0x00ffff,
-            transparent: true,
-            opacity: 0,
-            blending: THREE.AdditiveBlending
+            size: 0.05, color: 0x00ffff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending
         });
         const particleMesh = new THREE.Points(particleGeo, particleMat);
         scene.add(particleMesh);
@@ -333,7 +403,6 @@
         let previousMousePosition = { x: 0, y: 0 };
 
         document.addEventListener('pointerdown', (e) => {
-            // UIのボタンクリック時はドラッグと判定しない
             if(e.target.classList.contains('btn')) return;
             isDragging = true;
             document.getElementById('status').style.opacity = 0;
@@ -352,10 +421,12 @@
         });
 
         // --- 7. エフェクト起動ロジック ---
-        let currentMode = 'none'; // 'none', 'cyber', 'kabuki'
+        let currentMode = 'none'; // 'none', 'cyber', 'kabuki', 'custom'
         const normalBtn = document.getElementById('normalBtn');
         const cyberBtn = document.getElementById('cyberBtn');
         const kabukiBtn = document.getElementById('kabukiBtn');
+        const customBtn = document.getElementById('customBtn');
+        const nftOverlay = document.getElementById('nft-overlay');
 
         function updateUI() {
             // ボタンの見た目を更新
@@ -365,32 +436,36 @@
             cyberBtn.style.background = currentMode === 'cyber' ? "rgba(0, 255, 255, 0.4)" : "rgba(0, 255, 255, 0.1)";
             cyberBtn.style.boxShadow = currentMode === 'cyber' ? "0 0 20px rgba(0, 255, 255, 0.6)" : "0 0 10px rgba(0, 255, 255, 0.2)";
             
-            // 歌舞伎ボタンも赤と黒を基調としたデザインに
             kabukiBtn.style.background = currentMode === 'kabuki' ? "rgba(200, 0, 0, 0.6)" : "rgba(30, 0, 0, 0.6)";
             kabukiBtn.style.boxShadow = currentMode === 'kabuki' ? "0 0 20px rgba(255, 0, 0, 0.8)" : "0 0 10px rgba(255, 50, 50, 0.2)";
+
+            customBtn.style.background = currentMode === 'custom' ? "rgba(138, 43, 226, 0.6)" : "rgba(138, 43, 226, 0.2)";
+            customBtn.style.boxShadow = currentMode === 'custom' ? "0 0 20px rgba(138, 43, 226, 0.8)" : "0 0 10px rgba(138, 43, 226, 0.3)";
+
+            // NFT UIの表示制御
+            if (currentMode === 'custom') {
+                nftOverlay.style.opacity = 1;
+            } else {
+                nftOverlay.style.opacity = 0;
+            }
 
             // パーティクルとライトの色をモードに合わせて変更
             if (currentMode === 'cyber') {
                 particleMat.color.setHex(0x00ffff); // シアン
                 effectLight.color.setHex(0x00ffff);
             } else if (currentMode === 'kabuki') {
-                particleMat.color.setHex(0xff0000); // パーティクルも赤に変更
-                effectLight.color.setHex(0xff0000); // レッド
+                particleMat.color.setHex(0xff0000); // レッド
+                effectLight.color.setHex(0xff0000); 
+            } else if (currentMode === 'custom') {
+                particleMat.color.setHex(0xff00ff); // マゼンタパープル
+                effectLight.color.setHex(0x8a2be2); // ディープパープル
             }
         }
 
-        normalBtn.addEventListener('click', () => { 
-            currentMode = 'none'; 
-            updateUI(); 
-        });
-        cyberBtn.addEventListener('click', () => { 
-            currentMode = 'cyber'; 
-            updateUI(); 
-        });
-        kabukiBtn.addEventListener('click', () => { 
-            currentMode = 'kabuki'; 
-            updateUI(); 
-        });
+        normalBtn.addEventListener('click', () => { currentMode = 'none'; updateUI(); });
+        cyberBtn.addEventListener('click', () => { currentMode = 'cyber'; updateUI(); });
+        kabukiBtn.addEventListener('click', () => { currentMode = 'kabuki'; updateUI(); });
+        customBtn.addEventListener('click', () => { currentMode = 'custom'; updateUI(); });
 
         // --- 8. アニメーションループ ---
         const clock = new THREE.Clock();
@@ -408,31 +483,41 @@
 
             // 起動状態に応じたアニメーション
             if (currentMode === 'cyber') {
-                // サイバー表示、歌舞伎非表示
                 if (cyberMat.opacity < 0.6) cyberMat.opacity += 0.02;
                 if (kabukiMat.opacity > 0) kabukiMat.opacity -= 0.05;
+                if (customMat.opacity > 0) customMat.opacity -= 0.05;
                 
                 if (effectLight.intensity < 2) effectLight.intensity += 0.1;
                 if (particleMat.opacity < 0.8) particleMat.opacity += 0.02;
                 
-                // ワイヤーフレームを速く脈打たせる
                 cyberMat.opacity = 0.4 + Math.sin(time * 3) * 0.2;
 
             } else if (currentMode === 'kabuki') {
-                // 歌舞伎表示、サイバー非表示
                 if (kabukiMat.opacity < 0.8) kabukiMat.opacity += 0.02;
                 if (cyberMat.opacity > 0) cyberMat.opacity -= 0.05;
+                if (customMat.opacity > 0) customMat.opacity -= 0.05;
                 
                 if (effectLight.intensity < 2) effectLight.intensity += 0.1;
                 if (particleMat.opacity < 0.8) particleMat.opacity += 0.02;
                 
-                // 模様をゆっくり重厚に脈打たせる
                 kabukiMat.opacity = 0.6 + Math.sin(time * 1.5) * 0.2;
 
-            } else {
-                // 両方とも徐々に消す (ノーマル状態)
+            } else if (currentMode === 'custom') {
+                if (customMat.opacity < 0.8) customMat.opacity += 0.02;
                 if (cyberMat.opacity > 0) cyberMat.opacity -= 0.05;
                 if (kabukiMat.opacity > 0) kabukiMat.opacity -= 0.05;
+                
+                if (effectLight.intensity < 2) effectLight.intensity += 0.1;
+                if (particleMat.opacity < 0.8) particleMat.opacity += 0.02;
+                
+                // ホログラムが煌めくような演出
+                customMat.opacity = 0.5 + Math.sin(time * 2) * 0.3;
+
+            } else {
+                // ノーマル状態
+                if (cyberMat.opacity > 0) cyberMat.opacity -= 0.05;
+                if (kabukiMat.opacity > 0) kabukiMat.opacity -= 0.05;
+                if (customMat.opacity > 0) customMat.opacity -= 0.05;
                 if (effectLight.intensity > 0) effectLight.intensity -= 0.1;
                 if (particleMat.opacity > 0) particleMat.opacity -= 0.05;
             }
@@ -440,14 +525,12 @@
             renderer.render(scene, camera);
         }
 
-        // ウィンドウリサイズ対応
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
 
-        // アニメーション開始
         window.onload = function() {
             animate();
         };
